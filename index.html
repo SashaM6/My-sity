@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Геометричний Калькулятор</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .input-field {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+        .input-field:focus {
+            border-color: #60a5fa;
+            box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.2);
+        }
+        .result-card {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(147, 51, 234, 0.1) 100%);
+            border-left: 3px solid #60a5fa;
+        }
+        .nav-item.active {
+            background: linear-gradient(90deg, #3b82f6 0%, #8b5cf6 100%);
+        }
+        canvas {
+            filter: drop-shadow(0 0 20px rgba(96, 165, 250, 0.3));
+        }
+        .formula {
+            font-family: 'Courier New', monospace;
+            background: rgba(0, 0, 0, 0.4);
+            padding: 0.5rem;
+            border-radius: 0.5rem;
+            border-left: 3px solid #f59e0b;
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-white min-h-screen overflow-x-hidden">
+
+    <!-- Background Animation -->
+    <div class="fixed inset-0 overflow-hidden pointer-events-none">
+        <div class="absolute -top-40 -right-40 w-96 h-96 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse"></div>
+        <div class="absolute -bottom-40 -left-40 w-96 h-96 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse" style="animation-delay: 2s;"></div>
+        <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-pink-500 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-pulse" style="animation-delay: 4s;"></div>
+    </div>
+
+    <div class="relative z-10 flex flex-col lg:flex-row min-h-screen">
+        
+        <!-- Sidebar Navigation -->
+        <nav class="lg:w-64 bg-slate-800/50 backdrop-blur-md border-r border-white/10 p-6 flex flex-col gap-2">
+            <div class="mb-8">
+                <h1 class="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+                    GeoCalc
+                </h1>
+                <p class="text-slate-400 text-sm mt-1">Геометричний калькулятор</p>
+            </div>
+
+            <button onclick="showSection('circle')" id="nav-circle" class="nav-item active w-full text-left px-4 py-3 rounded-xl transition-all duration-300 hover:bg-white/10 flex items-center gap-3 group">
+                <div class="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-width="2"/></svg>
+                </div>
+                <span class="font-medium">Круг</span>
+            </button>
+
+            <button onclick="showSection('square')" id="nav-square" class="nav-item w-full text-left px-4 py-3 rounded-xl transition-all duration-300 hover:bg-white/10 flex items-center gap-3 group">
+                <div class="w-8 h-8 rounded-lg bg-purple-500/20 flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" stroke-width="2"/></svg>
+                </div>
+                <span class="font-medium">Квадрат</span>
+            </button>
+
+            <button onclick="showSection('rectangle')" id="nav-rectangle" class="nav-item w-full text-left px-4 py-3 rounded-xl transition-all duration-300 hover:bg-white/10 flex items-center gap-3 group">
+                <div class="w-8 h-8 rounded-lg bg-pink-500/20 flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <svg class="w-5 h-5 text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2" stroke-width="2"/></svg>
+                </div>
+                <span class="font-medium">Прямокутник</span>
+            </button>
+
+            <button onclick="showSection('triangle')" id="nav-triangle" class="nav-item w-full text-left px-4 py-3 rounded-xl transition-all duration-300 hover:bg-white/10 flex items-center gap-3 group">
+                <div class="w-8 h-8 rounded-lg bg-amber-500/20 flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <svg class="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 3L2 22h20L12 3z" stroke-width="2"/></svg>
+                </div>
+                <span class="font-medium">Трикутник</span>
+            </button>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="flex-1 p-4 lg:p-8 overflow-y-auto">
+            
+            <!-- CIRCLE SECTION -->
+            <section id="section-circle" class="section-content max-w-6xl mx-auto">
+                <div class="mb-8">
+                    <h2 class="text-4xl font-bold mb-2 bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">Круг</h2>
+                    <p class="text-slate-400">Обчислення площі, діаметра та довжини дуги за радіусом</p>
+                </div>
+
+                <div class="grid lg:grid-cols-2 gap-8">
+                    <!-- Input Panel -->
+                    <div class="glass-panel rounded-2xl p-6 space-y-6">
+                        <div class="space-y-2">
+                            <label class="text-sm font-semibold text-blue-300 uppercase tracking-wider">Радіус (r)</label>
+                            <div class="flex items-center gap-4">
+                                <input type="number" id="circle-radius" placeholder="Введіть радіус" 
+                                    class="input-field w-full px-4 py-3 rounded-xl text-white placeholder-slate-500 outline-none"
+                                    oninput="calculateCircle()">
+                                <span class="text-slate-400 font-mono">одиниць</span>
+                            </div>
+                        </div>
+
+                        <div class="formula text-sm text-slate-300 space-y-2">
+                            <div><span class="text-blue-400">S = πr²</span> — Площа</div>
+                            <div><span class="text-blue-400">d = 2r</span> — Діаметр</div>
+                            <div><span class="text-blue-400">C = 2πr</span> — Довжина кола</div>
+                        </div>
+
+                        <div class="grid grid-cols-1 gap-4 mt-6">
+                            <div class="result-card p-4 rounded-xl">
+                                <div class="text-slate-400 text-sm mb-1">Площа (S)</div>
+                                <div id="circle-area" class="text-2xl font-bold text-white">—</div>
+                            </div>
+                            <div class="result-card p-4 rounded-xl">
+                                <div class="text-slate-400 text-sm mb-1">Діаметр (d)</div>
+                                <div id="circle-diameter" class="text-2xl font-bold text-white">—</div>
+                            </div>
+                            <div class="result-card p-4 rounded-xl">
+                                <div class="text-slate-400 text-sm mb-1">Довжина кола (C)</div>
+                                <div id="ircle-circumference" class="text-2xl font-bold text-white">—</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Visualization -->
+                    <div class="glass-panel rounded-2xl p-6 flex items-center justify-center relative overflow-hidden">
+                        <canvas id="circle-canvas" width="400" height="400" class="max-w-full"></canvas>
+                        <div class="absolute bottom-4 right-4 text-xs text-slate-500">Масштаб: адаптивний</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SQUARE SECTION -->
+            <section id="section-square" class="section-content max-w-6xl mx-auto hidden">
+                <div class="mb-8">
+                    <h2 class="text-4xl font-bold mb-2 bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">Квадрат</h2>
+                    <p class="text-slate-400">Площа, периметр, діагональ та радіуси кіл</p>
+                </div>
+
+                <div class="grid lg:grid-cols-2 gap-8">
+                    <div class="glass-panel rounded-2xl p-6 space-y-6">
+                        <div class="space-y-2">
+                            <label class="text-sm font-semibold text-purple-300 uppercase tracking-wider">Сторона (a)</label>
+                            <div class="flex items-center gap-4">
+                                <input type="number" id="square-side" placeholder="Введіть довжину сторони" 
+                                    class="input-field w-full px-4 py-3 rounded-xl text-white placeholder-slate-500 outline-none"
+                                    oninput="calculateSquare()">
+                                <span class="text-slate-400 font-mono">одиниць</span>
+                            </div>
+                        </div>
+
+                        <div class="formula text-sm text-slate-300 space-y-2">
+                            <div><span class="text-purple-400">S = a²</span> — Площа</div>
+                            <div><span class="text-purple-400">P = 4a</span> — Периметр</div>
+                            <div><span class="text-purple-400">d = a√2</span> — Діагональ</div>
+                            <div><span class="text-purple-400">r = a/2</span> — Вписане коло</div>
+                            <div><span class="text-purple-400">R = a√2/2</span> — Описане коло</div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4 mt-6">
+                            <div class="result-card p-4 rounded-xl">
+                                <div class="text-slate-400 text-sm mb-1">Площа (S)</div>
+                                <div id="square-area" class="text-xl font-bold text-white">—</div>
+                            </div>
+                            <div class="result-card p-4 rounded-xl">
+                                <div class="text-slate-400 text-sm mb-1">Периметр (P)</div>
+                                <div id="square-perimeter" class="text-xl font-bold text-white">—</div>
+                            </div>
+                            <div class="result-card p-4 rounded-xl">
+                                <div class="text-slate-400 text-sm mb-1">Діагональ (d)</div>
+                                <div id="square-diagonal" class="text-xl font-bold text-white">—</div>
+                            </div>
+                            <div class="result-card p-4 rounded-xl">
+                                <div class="text-slate-400 text-sm mb-1">Вписане коло (r)</div>
+                                <div id="square-inradius" class="text-xl font-bold text-white">—</div>
+                            </div>
+                            <div class="result-card p-4 rounded-xl col-span-2">
+                                <div class="text-slate-400 text-sm mb-1">Описане коло (R)</div>
+                                <div id="square-circumradius" class="text-xl font-bold text-white">—</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="glass-panel rounded-2xl p-6 flex items-center justify-center relative overflow-hidden">
+                        <canvas id="square-canvas" width="400" height="400" class="max-w-full"></canvas>
+                        <div class="absolute bottom-4 right-4 text-xs text-slate-500">Масштаб: адаптивний</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- RECTANGLE SECTION -->
+            <section id="section-rectangle" class="section-content max-w-6xl mx-auto hidden">
+                <div class="mb-8">
+                    <h2 class="text-4xl font-bold mb-2 bg-gradient-to-r from-pink-400 to-rose-400 bg-clip-text text-transparent">Прямокутник</h2>
+                    <p class="text-slate-400">Площа, периметр, діагональ та кути між діагоналями</p>
+                </div>
+
+                <div class="grid lg:grid-cols-2 gap-8">
+                    <div class="glass-panel rounded-2xl p-6 space-y-6">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="space-y-2">
+                                <label class="text-sm font-semibold text-pink-300 uppercase tracking-wider">Сторона a</label>
+                                <input type="number" id="rect-a" placeholder="a" 
+                                    class="input-field w-full px-4 py-3 rounded-xl text-white placeholder-slate-500 outline-none"
+                                    oninput="calculateRectangle()">
+                            </div>
+                            <div class="space-y-2">
+                                <label class="text-sm font-semibold text-pink-300 uppercase tracking-wider">Сторона b</label>
+                                <input type="number" id="rect-b" placeholder="b" 
+                                    class="input-field w-full px-4 py-3 rounded-xl text-white placeholder-slate-500 outline-none"
+                                    oninput="calculateRectangle()">
+                            </div>
+                        </div>
+
+                        <div class="formula text-sm text-slate-300 space-y-2">
+                            <div><span class="text-pink-400">S = ab</span> — Площа</div>
+                            <div><span class="text-pink-400">P = 2(a+b)</span> — Периметр</div>
+                            <div><span class="text-pink-400">d = √(a²+b²)</span> — Діагональ</div>
+                            <div><span class="text-pink-400">α = arctan(b/a)</span> — Кут між діагоналями</div>
+                            <div><span class="text-pink-400">β = arctan(a/b)</span> — Другий кут</div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4 mt-6">
+                            <div class="result-card p-4 rounded-xl">
+                                <div class="text-slate-400 text-sm mb-1">Площа (S)</div>
+                                <div id="rect-area" class="text-xl font-bold text-white">—</div>
+                            </div>
+                            <div class="result-card p-4 rounded-xl">
+                                <div class="text-slate-400 text-sm mb-1">Периметр (P)</div>
+                                <div id="rect-perimeter" class="text-xl font-bold text-white">—</div>
+                            </div>
+                            <div class="result-card p-4 rounded-xl">
+                                <div class="text-slate-400 text-sm mb-1">Діагональ (d)</div>
+                                <div id="rect-diagonal" class="text-xl font-bold text-white">—</div>
+                            </div>
+                            <div class="result-card p-4 rounded-xl">
+                                <div class="text-slate-400 text-sm mb-1">Кут α</div>
+                                <div id="rect-angle-alpha" class="text-xl font-bold text-white">—</div>
+                            </div>
+                            <div class="result-card p-4 rounded-xl col-span-2">
+                                <div class="text-slate-400 text-sm mb-1">Кут β</div>
+                                <div id="rect-angle-beta" class="text-xl font-bold text-white">—</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="glass-panel rounded-2xl p-6 flex items-center justify-center relative overflow-hidden">
+                        <canvas id="rectangle-canvas" width="400" height="400" class="max-w-full"></canvas>
+                        <div class="absolute bottom-4 right-4 text-xs text-slate-500">Масштаб: адаптивний</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TRIANGLE SECTION -->
+            <section id="section-triangle" class="section-content max-w-6xl mx-auto hidden">
+                <div class="mb-8">
+                    <h2 class="text-4xl font-bold mb-2 bg-gradient-to-r from-amber-400 to-orange-400 bg-clip-text text-transparent">Трикутник</h2>
+                    <p class="text-slate-400">Формула Герона для площі, периметр та радіуси кіл</p>
+                </div>
+
+                <div class="grid lg:grid-cols-2 gap-8">
+                    <div class="glass-panel rounded-2xl p-6 space-y-6">
+                        <div class="grid grid-cols-3 gap-3">
+                            <div class="space-y-2">
+                                <label class="text-sm font-semibold text-amber-300 uppercase tracking-wider">Сторона a</label>
+                                <input type="number" id="tri-a" placeholder="a" 
+                                    class="input-field w-full px-3 py-3 rounded-xl text-white placeholder-slate-500 outline-none text-center"
+                                    oninput="calculateTriangle()">
+                            </div>
+                            <div class="space-y-2">
+                                <label class="text-sm font-semibold text-amber-300 uppercase tracking-wider">Сторона b</label>
+                                <input type="number" id="tri-b" placeholder="b" 
+                                    class="input-field w-full px-3 py-3 rounded-xl text-white placeholder-slate-500 outline-none text-center"
+                                    oninput="calculateTriangle()">
+                            </div>
+                            <div class="space-y-2">
+                                <label class="text-sm font-semibold text-amber-300 uppercase tracking-wider">Сторона c</label>
+                                <input type="number" id="tri-c" placeholder="c" 
+                                    class="input-field w-full px-3 py-3 rounded-xl text-white placeholder-slate-500 outline-none text-center"
+                                    oninput="calculateTriangle()">
+                            </div>
+                        </div>
+
+                        <div class="formula text-sm text-slate-300 space-y-2">
+                            <div><span class="text-amber-400">p = (a+b+c)/2</span> — Півпериметр</div>
+                            <div><span class="text-amber-400">S = √[p(p-a)(p-b)(p-c)]</span> — Площа (Герон)</div>
+                            <div><span class="text-amber-400">P = a+b+c</span> — Периметр</div>
+                            <div><span class="text-amber-400">r = S/p</span> — Вписане коло</div>
+                            <div><span class="text-amber-400">R = abc/(4S)</span> — Описане коло</div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4 mt-6">
+                            <div class="result-card p-4 rounded-xl">
+                                <div class="text-slate-400 text-sm mb-1">Півпериметр (p)</div>
+                                <div id="tri-semiperimeter" class="text-lg font-bold text-white">—</div>
+                            </div>
+                            <div class="result-card p-4 rounded-xl">
+                                <div class="text-slate-400 text-sm mb-1">Площа (S)</div>
+                                <div id="tri-area" class="text-lg font-bold text-white">—</div>
+                            </div>
+                            <div class="result-card p-4 rounded-xl">
+                                <div class="text-slate-400 text-sm mb-1">Периметр (P)</div>
+                                <div id="tri-perimeter" class="text-lg font-bold text-white">—</div>
+                            </div>
+                            <div class="result-card p-4 rounded-xl">
+                                <div class="text-slate-400 text-sm mb-1">Вписане коло (r)</div>
+                                <div id="tri-inradius" class="text-lg font-bold text-white">—</div>
+                            </div>
+                            <div class="result-card p-4 rounded-xl col-span-2">
+                                <div class="text-slate-400 text-sm mb-1">Описане коло (R)</div>
+                                <div id="tri-circumradius" class="text-lg font-bold text-white">—</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="glass-panel rounded-2xl p-6 flex items-center justify-center relative overflow-hidden">
+                        <canvas id="triangle-canvas" width="400" height="400" class="max-w-full"></canvas>
+                        <div class="absolute bottom-4 right-4 text-xs text-slate-500">Масштаб: адаптивний</div>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <script>
+        // Navigation
+        function showSection(sectionName) {
+            // Hide all sections
+            document.querySelectorAll('.section-content').forEach(section => {
+                section.classList.add('hidden');
+            });
+            
+            // Show selected section
+            document.getElementById(`section-${sectionName}`).classList.remove('hidden');
+            
+            // Update nav buttons
+            document.querySelectorAll('.nav-item').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.getElementById(`nav-${sectionName}`).classList.add('active');
+            
+            // Redraw canvas
+            setTimeout(() => {
+                if (sectionName === 'circle') calculateCircle();
+                if (sectionName === 'square') calculateSquare();
+                if (sectionName === 'rectangle') calculateRectangle();
+                if (sectionName === 'triangle') calculateTriangle();
+            }, 100);
+        }
+
+        // Circle Calculations
+        function calculateCircle() {
+            const r = parseFloat(document.getElementById('circle-radius').value);
+            const canvas = document.getElementById('circle-canvas');
+            const ctx = canvas.getContext('2d');
+            
+            if (!r || r <= 0) {
+                document.getElementById('circle-area').textContent = '—';
+                document.getElementById('circle-diameter').textContent = '—';
+                document.getElementById('ircle-circumference').textContent = '—';
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                return;
+            }
+            
+            const S = Math.PI * r * r;
+            const d = 2 * r;
+            const C = 2 * Math.PI * r;
+            
+            document.getElementById('circle-area').textContent = S.toFixed(4);
+            document.getElementById('circle-diameter').textContent = d.toFixed(4);
+            document.getElementById('ircle-circumference').textContent = C.toFixed(4);
+            
+            // Draw
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const maxRadius = Math.min(centerX, centerY) - 40;
+            const scale = maxRadius / (r * 1.2);
+            const drawRadius = r * scale;
+            
+            // Grid
+            ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+            ctx.lineWidth = 1;
+            for (let i = 0; i < canvas.width; i += 20) {
+                ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, canvas.height); ctx.stroke();
+            }
+            for (let i = 0; i < canvas.height; i += 20) {
+                ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(canvas.width, i); ctx.stroke();
+            }
+            
+            // Circle
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, drawRadius, 0, 2 * Math.PI);
+            ctx.fillStyle = 'rgba(59, 130, 246, 0.2)';
+            ctx.fill();
+            ctx.strokeStyle = '#60a5fa';
+            ctx.lineWidth = 3;
+            ctx.stroke();
+            
+            // Radius line
+            ctx.beginPath();
+            ctx.moveTo(centerX, centerY);
+            ctx.lineTo(centerX + drawRadius, centerY);
+            ctx.strokeStyle = '#f59e0b';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            // Labels
+            ctx.fillStyle = '#fff';
+            ctx.font = '14px Inter';
+            ctx.fillText(`r = ${r}`, centerX + drawRadius/2 - 20, centerY - 10);
+            ctx.fillStyle = '#60a5fa';
+            ctx.fillText(`S = ${S.toFixed(2)}`, 20, 30);
+            ctx.fillText(`C = ${C.toFixed(2)}`, 20, 50);
+        }
+
+        // Square Calculations
+        function calculateSquare() {
+            const a = parseFloat(document.getElementById('square-side').value);
+            const canvas = document.getElementById('square-canvas');
+            const ctx = canvas.getContext('2d');
+            
+            if (!a || a <= 0) {
+                document.getElementById('square-area').textContent = '—';
+                document.getElementById('square-perimeter').textContent = '—';
+                document.getElementById('square-diagonal').textContent = '—';
+                document.getElementById('square-inradius').textContent = '—';
+                document.getElementById('square-circumradius').textContent = '—';
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                return;
+            }
+            
+            const S = a * a;
+            const P = 4 * a;
+            const d = a * Math.sqrt(2);
+            const r = a / 2;
+            const R = a * Math.sqrt(2) / 2;
+            
+            document.getElementById('square-area').textContent = S.toFixed(4);
+            document.getElementById('square-perimeter').textContent = P.toFixed(4);
+            document.getElementById('square-diagonal').textContent = d.toFixed(4);
+            document.getElementById('square-inradius').textContent = r.toFixed(4);
+            document.getElementById('square-circumradius').textContent = R.toFixed(4);
+            
+            // Draw
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const maxSize = Math.min(canvas.width, canvas.height) - 80;
+            const scale = maxSize / (a * 1.5);
+            const size = a * scale;
+            
+            const x = centerX - size/2;
+            const y = centerY - size/2;
+            
+            // Grid
+            ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+            ctx.lineWidth = 1;
+            for (let i = 0; i < canvas.width; i += 20) {
+                ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, canvas.height); ctx.stroke();
+            }
+            for (let i = 0; i < canvas.height; i += 20) {
+                ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(canvas.width, i); ctx.stroke();
+            }
+            
+            // Square
+            ctx.fillStyle = 'rgba(147, 51, 234, 0.2)';
+            ctx.fillRect(x, y, size, size);
+            ctx.strokeStyle = '#a855f7';
+            ctx.lineWidth = 3;
+            ctx.strokeRect(x, y, size, size);
+            
+            // Diagonal
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+            ctx.lineTo(x + size, y + size);
+            ctx.strokeStyle = 'rgba(245, 158, 11, 0.6)';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([5, 5]);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            
+            // Inscribed circle
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, size/2, 0, 2 * Math.PI);
+            ctx.strokeStyle = 'rgba(34, 197, 94, 0.6)';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            // Circumscribed circle
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, size * Math.sqrt(2) / 2, 0, 2 * Math.PI);
+            ctx.strokeStyle = 'rgba(239, 68, 68, 0.6)';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            // Labels
+            ctx.fillStyle = '#fff';
+            ctx.font = '14px Inter';
+            ctx.fillText(`a = ${a}`, x + size/2 - 20, y + size + 25);
+            ctx.fillStyle = '#a855f7';
+            ctx.fillText(`S = ${S.toFixed(2)}`, 20, 30);
+            ctx.fillText(`P = ${P.toFixed(2)}`, 20, 50);
+        }
+
+        // Rectangle Calculations
+        function calculateRectangle() {
+            const a = parseFloat(document.getElementById('rect-a').value);
+            const b = parseFloat(document.getElementById('rect-b').value);
+            const canvas = document.getElementById('rectangle-canvas');
+            const ctx = canvas.getContext('2d');
+            
+            if (!a || !b || a <= 0 || b <= 0) {
+                document.getElementById('rect-area').textContent = '—';
+                document.getElementById('rect-perimeter').textContent = '—';
+                document.getElementById('rect-diagonal').textContent = '—';
+                document.getElementById('rect-angle-alpha').textContent = '—';
+                document.getElementById('rect-angle-beta').textContent = '—';
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                return;
+            }
+            
+            const S = a * b;
+            const P = 2 * (a + b);
+            const d = Math.sqrt(a*a + b*b);
+            const alpha = Math.atan(b/a) * (180/Math.PI);
+            const beta = Math.atan(a/b) * (180/Math.PI);
+            
+            document.getElementById('rect-area').textContent = S.toFixed(4);
+            document.getElementById('rect-perimeter').textContent = P.toFixed(4);
+            document.getElementById('rect-diagonal').textContent = d.toFixed(4);
+            document.getElementById('rect-angle-alpha').textContent = alpha.toFixed(2) + '°';
+            document.getElementById('rect-angle-beta').textContent = beta.toFixed(2) + '°';
+            
+            // Draw
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            
+            const maxDim = Math.max(a, b);
+            const scale = (Math.min(canvas.width, canvas.height) - 100) / maxDim;
+            const drawA = a * scale;
+            const drawB = b * scale;
+            
+            const x = centerX - drawA/2;
+            const y = centerY - drawB/2;
+            
+            // Grid
+            ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+            ctx.lineWidth = 1;
+            for (let i = 0; i < canvas.width; i += 20) {
+                ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, canvas.height); ctx.stroke();
+            }
+            for (let i = 0; i < canvas.height; i += 20) {
+                ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(canvas.width, i); ctx.stroke();
+            }
+            
+            // Rectangle
+            ctx.fillStyle = 'rgba(236, 72, 153, 0.2)';
+            ctx.fillRect(x, y, drawA, drawB);
+            ctx.strokeStyle = '#ec4899';
+            ctx.lineWidth = 3;
+            ctx.strokeRect(x, y, drawA, drawB);
+            
+            // Both diagonals
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+            ctx.lineTo(x + drawA, y + drawB);
+            ctx.moveTo(x + drawA, y);
+            ctx.lineTo(x, y + drawB);
+            ctx.strokeStyle = 'rgba(245, 158, 11, 0.8)';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([5, 5]);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            
+            // Angle arc at intersection
+            const intersectX = centerX;
+            const intersectY = centerY;
+            
+            // Labels
+            ctx.fillStyle = '#fff';
+            ctx.font = '14px Inter';
+            ctx.fillText(`a = ${a}`, x + drawA/2 - 20, y + drawB + 25);
+            ctx.fillText(`b = ${b}`, x + drawA + 10, y + drawB/2);
+            ctx.fillStyle = '#ec4899';
+            ctx.fillText(`S = ${S.toFixed(2)}`, 20, 30);
+            ctx.fillText(`d = ${d.toFixed(2)}`, 20, 50);
+        }
+
+        // Triangle Calculations
+        function calculateTriangle() {
+            const a = parseFloat(document.getElementById('tri-a').value);
+            const b = parseFloat(document.getElementById('tri-b').value);
+            const c = parseFloat(document.getElementById('tri-c').value);
+            const canvas = document.getElementById('triangle-canvas');
+            const ctx = canvas.getContext('2d');
+            
+            if (!a || !b || !c || a <= 0 || b <= 0 || c <= 0) {
+                document.getElementById('tri-semiperimeter').textContent = '—';
+                document.getElementById('tri-area').textContent = '—';
+                document.getElementById('tri-perimeter').textContent = '—';
+                document.getElementById('tri-inradius').textContent = '—';
+                document.getElementById('tri-circumradius').textContent = '—';
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                return;
+            }
+            
+            // Check triangle inequality
+            if (a + b <= c || a + c <= b || b + c <= a) {
+                document.getElementById('tri-area').textContent = 'Неможливий △';
+                document.getElementById('tri-semiperimeter').textContent = '—';
+                document.getElementById('tri-perimeter').textContent = '—';
+                document.getElementById('tri-inradius').textContent = '—';
+                document.getElementById('tri-circumradius').textContent = '—';
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = '#ef4444';
+                ctx.font = '16px Inter';
+                ctx.fillText('Трикутник з такими сторонами не існує', 50, canvas.height/2);
+                return;
+            }
+            
+            const P = a + b + c;
+            const p = P / 2;
+            const S = Math.sqrt(p * (p-a) * (p-b) * (p-c));
+            const r = S / p;
+            const R = (a * b * c) / (4 * S);
+            
+            document.getElementById('tri-semiperimeter').textContent = p.toFixed(4);
+            document.getElementById('tri-area').textContent = S.toFixed(4);
+            document.getElementById('tri-perimeter').textContent = P.toFixed(4);
+            document.getElementById('tri-inradius').textContent = r.toFixed(4);
+            document.getElementById('tri-circumradius').textContent = R.toFixed(4);
+            
+            // Draw triangle using coordinates
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Calculate triangle coordinates using law of cosines
+            // Place A at (0,0), B at (c,0), C calculated
+            const angleA = Math.acos((b*b + c*c - a*a) / (2*b*c));
+            const x1 = 0, y1 = 0;
+            const x2 = c, y2 = 0;
+            const x3 = b * Math.cos(angleA);
+            const y3 = b * Math.sin(angleA);
+            
+            // Scale and center
+            const minX = Math.min(x1, x2, x3);
+            const maxX = Math.max(x1, x2, x3);
+            const minY = Math.min(y1, y2, y3);
+            const maxY = Math.max(y1, y2, y3);
+            
+            const width = maxX - minX;
+            const height = maxY - minY;
+            const scale = Math.min((canvas.width - 100) / width, (canvas.height - 100) / height);
+            
+            const offsetX = (canvas.width - width * scale) / 2 - minX * scale;
+            const offsetY = (canvas.height - height * scale) / 2 - minY * scale;
+            
+            const p1 = {x: x1 * scale + offsetX, y: canvas.height - (y1 * scale + offsetY)};
+            const p2 = {x: x2 * scale + offsetX, y: canvas.height - (y2 * scale + offsetY)};
+            const p3 = {x: x3 * scale + offsetX, y: canvas.height - (y3 * scale + offsetY)};
+            
+            // Grid
+            ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+            ctx.lineWidth = 1;
+            for (let i = 0; i < canvas.width; i += 20) {
+                ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, canvas.height); ctx.stroke();
+            }
+            for (let i = 0; i < canvas.height; i += 20) {
+                ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(canvas.width, i); ctx.stroke();
+            }
+            
+            // Triangle
+            ctx.beginPath();
+            ctx.moveTo(p1.x, p1.y);
+            ctx.lineTo(p2.x, p2.y);
+            ctx.lineTo(p3.x, p3.y);
+            ctx.closePath();
+            ctx.fillStyle = 'rgba(245, 158, 11, 0.2)';
+            ctx.fill();
+            ctx.strokeStyle = '#f59e0b';
+            ctx.lineWidth = 3;
+            ctx.stroke();
+            
+            // Inscribed circle
+            // Incenter coordinates
+            const incenterX = (a * p1.x + b * p2.x + c * p3.x) / P;
+            const incenterY = (a * p1.y + b * p2.y + c * p3.y) / P;
+            
+            ctx.beginPath();
+            ctx.arc(incenterX, incenterY, r * scale, 0, 2 * Math.PI);
+            ctx.strokeStyle = 'rgba(34, 197, 94, 0.6)';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            // Circumscribed circle
+            // Circumcenter calculation
+            const D = 2 * (p1.x * (p2.y - p3.y) + p2.x * (p3.y - p1.y) + p3.x * (p1.y - p2.y));
+            const ux = ((p1.x*p1.x + p1.y*p1.y) * (p2.y - p3.y) + (p2.x*p2.x + p2.y*p2.y) * (p3.y - p1.y) + (p3.x*p3.x + p3.y*p3.y) * (p1.y - p2.y)) / D;
+            const uy = ((p1.x*p1.x + p1.y*p1.y) * (p3.x - p2.x) + (p2.x*p2.x + p2.y*p2.y) * (p1.x - p3.x) + (p3.x*p3.x + p3.y*p3.y) * (p2.x - p1.x)) / D;
+            
+            ctx.beginPath();
+            ctx.arc(ux, uy, R * scale, 0, 2 * Math.PI);
+            ctx.strokeStyle = 'rgba(239, 68, 68, 0.6)';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            // Labels
+            ctx.fillStyle = '#fff';
+            ctx.font = '14px Inter';
+            ctx.fillText(`a=${a}`, (p2.x+p3.x)/2 - 30, (p2.y+p3.y)/2);
+            ctx.fillText(`b=${b}`, (p1.x+p3.x)/2, (p1.y+p3.y)/2 - 10);
+            ctx.fillText(`c=${c}`, (p1.x+p2.x)/2, (p1.y+p2.y)/2 + 20);
+            ctx.fillStyle = '#f59e0b';
+            ctx.fillText(`S = ${S.toFixed(2)}`, 20, 30);
+            ctx.fillText(`p = ${p.toFixed(2)}`, 20, 50);
+        }
+
+        // Initialize
+        window.onload = function() {
+            calculateCircle();
+        };
+    </script>
+</body>
+</html>
